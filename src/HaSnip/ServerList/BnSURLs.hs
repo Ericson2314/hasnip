@@ -1,4 +1,4 @@
-module HaSpades.Serverlist.BnSURLs where
+module HaSnip.Serverlist.BnSURLs where
 
 import Network.URL
 
