@@ -1,3 +1,5 @@
+![HaSnip Logo](http://ericson2314.github.io/hasnip/assets/logo.svg)
+
 HaSnip
 ======
 
