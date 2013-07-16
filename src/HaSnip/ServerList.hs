@@ -21,17 +21,13 @@ import HaSnip.Misc(convertSymbolName)
 
 
 instance FromJSON SockAddr where
-  parseJSON (String cs) =
-    if "aos://" == T.take 5 cs
-    then case T.split (==':') (T.drop 5 cs) of
-      ns@(_:_:[]) -> pure $ SockAddrInet port ip
-        where ip       = read i
-              port     = PortNum $ read p
-              (i:p:[]) = map T.unpack ns
-  -- failure
-      _         -> mzero
-    else           mzero
-  parseJSON _   =  mzero
+  parseJSON (String cs)
+    | "aos://" == T.take 5 cs
+    , [i,p] <- map T.unpack $ T.split (==':') (T.drop 5 cs)
+    = pure $ SockAddrInet (PortNum $ read p) $ read i
+
+    | otherwise
+    = mzero
 
 data AoSVersion = Ben [Int]
                 | PowerThirst
