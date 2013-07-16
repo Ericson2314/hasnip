@@ -1,15 +1,14 @@
-module HaSnip.Serverlist.BnSURLs where
+module HaSnip.ServerList.BnSURLs where
 
-import Network.URL
+import Data.List
 
-buildAndShootServices :: Host
-buildAndShootServices = Host { protocol = HTTP False
-                             , host     = "services.buildandshoot.com"
-                             , port     = Nothing
-                             }
+import Network.URI
 
-getBnS :: String -> URL -- version number | 'powerthirst'
-getBnS gameVer = URL { url_type   = Absolute $ buildAndShootServices
-                     , url_path   = "serverlist.json"
-                     , url_params = [("version", gameVer)]
-                     }
+import HaSnip.ServerList
+
+getBnS :: AoSVersion -> URI -- version number | 'powerthirst'
+getBnS gameVer = a
+  where (Just a) = parseURI $ "http://services.buildandshoot.com/serverlist.json?version="
+                   ++ case gameVer of
+                     PowerThirst -> "powerthirst"
+                     (Ben ns)    -> foldl' (\a c -> shows c $ '.':a) [] ns

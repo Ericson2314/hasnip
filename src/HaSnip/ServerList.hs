@@ -1,5 +1,5 @@
 {-# Language TemplateHaskell, OverloadedStrings #-}
-module HaSnip.Serverlist where
+module HaSnip.ServerList where
  -- http://services.buildandshoot.com/serverlist.json?version=0.75
 
 import Control.Applicative
@@ -14,8 +14,6 @@ import Network.Socket ( SockAddr(SockAddrInet)
                       , PortNumber(PortNum)
                       )
 
-import System.Endian
-
 import Data.Aeson
 import Data.Aeson.TH
 
@@ -27,7 +25,7 @@ instance FromJSON SockAddr where
     if "aos://" == T.take 5 cs
     then case T.split (==':') (T.drop 5 cs) of
       ns@(_:_:[]) -> pure $ SockAddrInet port ip
-        where ip       = toBE32 $ fromLE32 $ read i -- don't forget endianness switch!
+        where ip       = read i
               port     = PortNum $ read p
               (i:p:[]) = map T.unpack ns
   -- failure
@@ -37,6 +35,7 @@ instance FromJSON SockAddr where
 
 data AoSVersion = Ben [Int]
                 | PowerThirst
+                  deriving (Eq, Show, Read) -- show defined in BnSURL
 
 instance FromJSON AoSVersion where
    parseJSON (String "PT") = pure PowerThirst
