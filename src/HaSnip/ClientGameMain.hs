@@ -20,15 +20,15 @@ import qualified Network.ENet.Peer as Peer
 init :: SockAddr -> IO ()
 init servAddr = withENetDo $ do
   client <- Host.create
-            Nothing         -- create a client host
-            1               -- only allow 1 outgoing connection
-            2               -- allow up 2 channels to be used, 0 and 1
-            (57600 `div` 8) -- 56K modem with 56 Kbps downstream bandwidth
-            (14400 `div` 8) -- 56K modem with 14 Kbps upstream bandwidth
+            Nothing -- create a client host
+            1       -- only allow 1 outgoing connection
+            2       -- allow up 2 channels to be used, 0 and 1
+            0       -- unlimited bandwidth in
+            0       -- unlimited bandwidth out
 
-  host <- Host.connect client servAddr 1 3
+  host <- Host.connect client servAddr 1 3 -- 3 is AoS 0.75 magic number
 
-  let loop = do temp <- Host.service client 10000
+  let loop = do temp <- Host.service client 100
                 case temp of
                   Nothing -> return ()
                   (Just (B.Event t p chan dat pack)) -> case t of
