@@ -27,13 +27,15 @@ init servAddr = withENetDo $ do
             0       -- unlimited bandwidth in
             0       -- unlimited bandwidth out
 
+  Host.compressWithRangeCoder client
+
   host <- Host.connect
           client   -- us
           servAddr -- server address
           1        -- use 1 channel
           3        -- 3 is AoS 0.75 magic number
 
-  let loop = do temp <- Host.service client 750
+  let loop = do temp <- Host.service client 5000
                 case temp of
                   (Just (B.Event t p chan dat pack)) -> case t of
                     B.None       -> print "got none"       >> loop
