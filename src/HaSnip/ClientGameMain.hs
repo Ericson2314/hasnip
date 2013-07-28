@@ -16,7 +16,7 @@ import qualified Network.ENet.Bindings as B
 import qualified Network.ENet.Host as Host
 import qualified Network.ENet.Peer as Peer
 
--- localhost w/ default port is: SockAddr 32887 16777343
+-- localhost w/ default port is: SockAddrInet 32887 16777343
 
 init :: SockAddr -> IO ()
 init servAddr = withENetDo $ do
