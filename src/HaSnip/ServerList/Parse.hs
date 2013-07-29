@@ -32,7 +32,14 @@ instance ToJSON SockAddr where
 
 data AoSVersion = Ben [Int]
                 | PowerThirst
-                  deriving (Eq, Show, Read) -- show defined in BnSURL
+                  deriving Eq
+
+instance Show AoSVersion where
+  show PowerThirst = "PT"
+  show (Ben ns)    = help ns
+    where help []     = error "version number must not be blank"
+          help [n]    = show n
+          help (n:ns) = show n ++ "." ++ help ns
 
 instance FromJSON AoSVersion where
    parseJSON (String "PT") = pure PowerThirst
@@ -40,9 +47,7 @@ instance FromJSON AoSVersion where
    parseJSON _             = mzero -- failure
 
 instance ToJSON AoSVersion where
-  toJSON PowerThirst = String $ "PT"
-  toJSON (Ben ns)   = String $ help ns
-     where help (n:ns) = (T.pack $ show n) >< "." >< help ns
+  toJSON ver = String $ T.pack $ show ver
 
 data Server = Server { s_name            :: String
                      , s_identifier      :: SockAddr

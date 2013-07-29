@@ -18,9 +18,7 @@ import Network.HTTP.HandleStream
 import HaSnip.ServerList.Parse
 
 getBnS :: AoSVersion -> URI -- version number | 'powerthirst'
-getBnS gameVer = fromJust $ parseAbsoluteURI $ stub ++ case gameVer of
-    PowerThirst -> "powerthirst"
-    (Ben ns)    -> foldl' (\a c -> shows c $ '.':a) [] ns
+getBnS gameVer = fromJust $ parseAbsoluteURI $ stub ++ show gameVer
   where stub = "http://services.buildandshoot.com/serverlist.json?version="
 
 getListing :: AoSVersion -> IO [Server]
