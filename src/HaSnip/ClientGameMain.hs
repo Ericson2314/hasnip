@@ -8,6 +8,8 @@ import qualified Data.ByteString.Char8 as CB
 
 import Data.Word
 
+import Control.Concurrent
+
 import Network.Socket(SockAddr(SockAddrInet, SockAddrInet6))
 import Network.Socket.ByteString
 
@@ -19,7 +21,7 @@ import qualified Network.ENet.Peer as Peer
 -- localhost w/ default port is: SockAddrInet 32887 16777343
 
 init :: SockAddr -> IO ()
-init servAddr = withENetDo $ do
+init servAddr = runInBoundThread $ withENetDo $ do
   client <- Host.create
             Nothing -- create a client host
             1       -- only allow 1 outgoing connection

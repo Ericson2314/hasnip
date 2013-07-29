@@ -39,4 +39,4 @@ executable hasnip
     ,                aeson           >= 0.6
     ,                HTTP            >= 4000.2
     ,                typesafe-endian == 0.1.*
-    ,                henet           >= 1.3.8.1.1 && == 1.3.8.*
+    ,                henet           >= 1.3.8.2 && == 1.3.8.*
