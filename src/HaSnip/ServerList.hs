@@ -1,53 +1,34 @@
-{-# Language TemplateHaskell, OverloadedStrings #-}
-module HaSnip.ServerList where
- -- http://services.buildandshoot.com/serverlist.json?version=0.75
+module HaSnip.ServerList (run) where
 
-import Control.Applicative
+import Prelude hiding (concat)
+
 import Control.Monad
 
-import Data.String
-import Data.Word
-import qualified Data.Text as T
-
-import Network (PortID)
-import Network.Socket ( SockAddr(SockAddrInet)
-                      , PortNumber(PortNum)
-                      )
-
+import Data.List (foldl')
+import Data.Maybe
 import Data.Aeson
-import Data.Aeson.TH
+import Data.Aeson.Types
 
-import HaSnip.Misc(convertSymbolName)
+import Data.Foldable (concat)
 
+import Network.URI
+import Network.HTTP hiding ( simpleHTTP )
+import Network.HTTP.HandleStream
 
-instance FromJSON SockAddr where
-  parseJSON (String cs)
-    | "aos://" == T.take 5 cs
-    , [i,p] <- map T.unpack $ T.split (==':') (T.drop 5 cs)
-    = pure $ SockAddrInet (PortNum $ read p) $ read i
+import HaSnip.ServerList.Parse
 
-    | otherwise
-    = mzero
+getBnS :: AoSVersion -> URI -- version number | 'powerthirst'
+getBnS gameVer = fromJust $ parseAbsoluteURI $ stub ++ case gameVer of
+    PowerThirst -> "powerthirst"
+    (Ben ns)    -> foldl' (\a c -> shows c $ '.':a) [] ns
+  where stub = "http://services.buildandshoot.com/serverlist.json?version="
 
-data AoSVersion = Ben [Int]
-                | PowerThirst
-                  deriving (Eq, Show, Read) -- show defined in BnSURL
+getListing :: AoSVersion -> IO [Server]
+getListing ver = fmap (concat . decode') . getResponseBody =<<
+                 (simpleHTTP $ mkRequest GET $ getBnS ver)
 
-instance FromJSON AoSVersion where
-   parseJSON (String "PT") = pure PowerThirst
-   parseJSON (String ver)  = pure $ Ben $ map (read . T.unpack) $ T.split (=='.') ver
-   parseJSON _             = mzero -- failure
+getAll :: IO [Server]
+getAll = fmap concat $ mapM getListing [Ben [0,75], Ben [0,76], PowerThirst]
 
-data Server = Server { s_name            :: String
-                     , s_identifier      :: SockAddr
-                     , s_map             :: String
-                     , s_gameMode        :: String
-                     , s_country         :: String
-                     , s_latency         :: Int
-                     , s_playersCurrent  :: Int
-                     , s_playersMax      :: Int
-                     , s_lastUpdated     :: Word32
-                     , s_gameVersion     :: AoSVersion
-                     }
-
-$(deriveFromJSON (convertSymbolName . drop 2) ''Server)
+run :: IO ()
+run = print =<< getAll
