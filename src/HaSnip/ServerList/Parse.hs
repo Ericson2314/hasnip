@@ -1,19 +1,14 @@
 {-# Language TemplateHaskell, OverloadedStrings #-}
 module HaSnip.ServerList.Parse where
- -- http://services.buildandshoot.com/serverlist.json?version=0.75
 
 import Control.Applicative
 import Control.Monad
-
-import Data.Maybe
 
 import Data.String
 import Data.Word
 import qualified Data.Text as T
 
-import Network.Socket ( SockAddr(SockAddrInet)
-                      , PortNumber(PortNum)
-                      )
+import Network.Socket ( SockAddr(SockAddrInet) )
 
 import Data.Aeson
 import Data.Aeson.TH
@@ -23,11 +18,11 @@ import HaSnip.Misc(convertSymbolName)
 (><) = T.append
 
 instance FromJSON SockAddr where
-  parseJSON (String cs)
-    | (pre, post) <- T.splitAt 5 cs
+  parseJSON (String (cs))
+    | (pre, post) <- T.splitAt 6 cs
     , "aos://" == pre
-    , [i,p] <- map T.unpack $ T.split (==':') (T.drop 5 post)
-    = pure $ SockAddrInet (PortNum $ read p) $ read i
+    , [i,p] <- map T.unpack $ T.split (==':') post
+    = pure $ SockAddrInet (toEnum $ read p) $ read i
 
     | otherwise  = mzero
 
