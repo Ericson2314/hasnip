@@ -12,12 +12,11 @@ import Data.Aeson.Types
 import Data.Foldable (concat)
 
 import Network.URI
-import Network.HTTP hiding ( simpleHTTP )
-import Network.HTTP.HandleStream
+import Network.HTTP
 
 import HaSnip.ServerList.Parse
 
-getBnS :: AoSVersion -> URI -- version number | 'powerthirst'
+getBnS :: AoSVersion -> URI
 getBnS gameVer = fromJust $ parseAbsoluteURI $ stub ++ show gameVer
   where stub = "http://services.buildandshoot.com/serverlist.json?version="
 
