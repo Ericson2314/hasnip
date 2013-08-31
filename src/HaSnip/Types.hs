@@ -2,7 +2,7 @@
 {-# LANGUAGE Rank2Types, ExistentialQuantification #-}
 {-# LANGUAGE ConstraintKinds, KindSignatures #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 {-# OPTIONS -funbox-strict-fields #-}
 module HaSnip.Types where
 
@@ -48,13 +48,13 @@ data Team     = Blue | Greeen | Neutral deriving (Eq, Show, Ord, Enum)
 data ItemType = Intel | Home            deriving (Eq, Show, Ord, Enum)
 
 data Thing    = Thing
-                !(IORef Position)
-                !(IORef Orientation)
+                !Position
+                !Orientation
                 !Team
               deriving (Eq, Show)
 data Player   = Player
                 !Thing
-                !(IORef Health)
+                !Health
                 !Color
               deriving (Eq, Show)
 
@@ -68,6 +68,8 @@ data GState = GState              {
 instance Show a => Show (IORef a) where
   show ref = "IORef: " ++ (show $ unsafePerformIO $ readIORef ref)
 
+eden :: GState
+eden = GState Data.Map.empty Data.Map.empty
 
 -- | Mailbox for each loop actor thread thing
 type EChan (ct :: * -> Constraint) = forall e. ct e => Chan e
@@ -83,3 +85,12 @@ class Input   elem state where  jab   :: elem -> state -> GState -> IO ()
 
 -- | Things that can go in Network's inbox
 class Network elem state where  mail  :: elem -> state -> GState -> IO ()
+
+
+-- | Things that can go in anybody's mailbox
+class Handle elem        where handle :: elem -> IO ()
+
+instance Handle elem => Sound   elem s where yell  e _ _ = handle e
+instance Handle elem => Video   elem s where shine e _ _ = handle e
+instance Handle elem => Input   elem s where jab   e _ _ = handle e
+instance Handle elem => Network elem s where mail  e _ _ = handle e
