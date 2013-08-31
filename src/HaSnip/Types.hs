@@ -2,6 +2,7 @@
 {-# LANGUAGE Rank2Types, ExistentialQuantification #-}
 {-# LANGUAGE ConstraintKinds, KindSignatures #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS -funbox-strict-fields #-}
 module HaSnip.Types where
 
@@ -66,3 +67,19 @@ data GState = GState              {
 
 instance Show a => Show (IORef a) where
   show ref = "IORef: " ++ (show $ unsafePerformIO $ readIORef ref)
+
+
+-- | Mailbox for each loop actor thread thing
+type EChan (ct :: * -> Constraint) = forall e. ct e => Chan e
+
+-- | Things that can go in Sound's inbox
+class Sound   elem state where  yell  :: elem -> state -> GState -> IO ()
+
+-- | Things that can go in Videos's inbox
+class Video   elem state where  shine :: elem -> state -> GState -> IO ()
+
+-- | Things that can go in Input's inbox
+class Input   elem state where  jab   :: elem -> state -> GState -> IO ()
+
+-- | Things that can go in Network's inbox
+class Network elem state where  mail  :: elem -> state -> GState -> IO ()
