@@ -2,11 +2,10 @@ module Main where
 
 import Control.Concurrent
 
--- importing to ensure compilation
-import HaSnip.ClientGameMain
-import HaSnip.Misc
 import HaSnip.ServerList
 
+import HaSnip.Types
+import HaSnip.Protocol.Ben
 
 main :: IO ()
 main = do setNumCapabilities =<< getNumCapabilities -- max cores!
