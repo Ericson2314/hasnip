@@ -3,6 +3,7 @@
 {-# LANGUAGE ConstraintKinds, KindSignatures #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS -funbox-strict-fields #-}
 module HaSnip.Types where
 
@@ -15,33 +16,46 @@ import Data.IORef
 import Data.Map
 import Data.Word
 import Data.BitSet.Generic
+import Data.Bytes.Serial
+import GHC.Generics
 
-data    Vect3F      = Vect3
-                      !Float -- ^ x
-                      !Float -- ^ y
-                      !Float -- ^ z
-                      deriving (Eq, Show, Ord)
+import Control.Applicative
 
-newtype Position    = Position    Vect3F deriving (Eq, Show, Ord)
-newtype Orientation = Orientation Vect3F deriving (Eq, Show, Ord)
-newtype Velocity    = Velocity    Vect3F deriving (Eq, Show, Ord)
+import Foreign.Storable
 
-newtype PlayerID    = PlayerID    Word8  deriving (Eq, Show, Ord)
-newtype ItemID      = ItemID      Word8  deriving (Eq, Show, Ord)
-newtype Health      = Health      Word8  deriving (Eq, Show, Ord, Enum, Num, Real, Integral)
+
+data Vect3F = Vect3F
+              !Float -- ^ x
+              !Float -- ^ y
+              !Float -- ^ z
+            deriving (Eq, Show, Ord)
+
+instance Serial Vect3F where
+  serialize (Vect3F a b c) = serializeLE a >> serializeLE b >> serializeLE c
+  deserialize = Vect3F <$> deserializeLE <*> deserializeLE <*> deserializeLE
+
+newtype Position    = Position    Vect3F deriving (Eq, Show, Ord, Serial)
+newtype Orientation = Orientation Vect3F deriving (Eq, Show, Ord, Serial)
+newtype Velocity    = Velocity    Vect3F deriving (Eq, Show, Ord, Serial)
+
+newtype PlayerID    = PlayerID    Word8  deriving (Eq, Show, Ord, Serial, Storable)
+newtype ItemID      = ItemID      Word8  deriving (Eq, Show, Ord, Serial, Storable)
+newtype Health      = Health      Word8  deriving (Eq, Show, Ord, Serial, Storable, Enum, Num, Real, Integral)
 
 data    Color       = Color
                       !Word8 -- ^ Blue
                       !Word8 -- ^ Green
                       !Word8 -- ^ Red
-                    deriving (Eq, Show)
+                    deriving (Eq, Show, Generic)
+instance Serial Color
 
 data    ColorA      = ColorA
                       !Word8 -- ^ Blue
                       !Word8 -- ^ Green
                       !Word8 -- ^ Red
                       !Word8 -- ^ Alpha
-                    deriving (Eq, Show)
+                    deriving (Eq, Show, Generic)
+instance Serial ColorA
 
 data Team     = Blue | Greeen | Neutral deriving (Eq, Show, Ord, Enum)
 

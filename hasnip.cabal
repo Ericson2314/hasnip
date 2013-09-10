@@ -27,6 +27,7 @@ executable hasnip
   main-is:           Main.hs
   hs-source-dirs:    src
   build-depends:     base            >= 4
+    ,                bytes           >= 0.12
     ,                bytestring      >= 0.10
     ,                bitset          >= 1.4.7
     ,                containers      >= 0.5.0
