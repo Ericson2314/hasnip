@@ -1,11 +1,20 @@
 {-# LANGUAGE MagicHash, BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables, LambdaCase, DeriveGeneric, FlexibleInstances #-}
+{-# LANGUAGE OverlappingInstances #-} -- BAD IDEA
 {-# OPTIONS -funbox-strict-fields #-}
 module HaSnip.Protocol.Ben.Parse where
+
+import Control.Applicative
 
 import Data.Word
 import Data.Int
 import Data.BitSet.Generic
+import Data.Bytes.Serial
+import Data.Bytes.Put (MonadPut)
+import Data.Bytes.Get (MonadGet)
 import Data.ByteString
+
+import GHC.Generics
 
 import HaSnip.Types
 
@@ -40,6 +49,14 @@ data    Chat        = All | Team | System
 data    Weapon      = Rifle | SMG | Shotgun
                     deriving (Eq, Show, Enum)
 
+instance SerialEndian c => Serial (BitSet c a) where
+  serialize = serializeLE . getBits
+  deserialize = BitSet <$> deserializeLE
+
+instance Serial (BitSet Word8 a) where
+  serialize = serialize . getBits
+  deserialize = BitSet <$> deserialize
+
 --------------------------------
 -- Actual Protocol
 --------------------------------
@@ -50,10 +67,12 @@ type P1  = Orientation
  -- P2 is Version Specific
 
 data P3  = P3 !PlayerID !(BitSet Word8 KeyState)
-         deriving (Eq, Show)
+         deriving (Eq, Show, Generic)
+instance Serial P3
 
 data P4  = P4 !PlayerID !(BitSet Word8 SubWeapon)
-         deriving (Eq, Show)
+         deriving (Eq, Show, Generic)
+instance Serial P4
 
  -- P5 is specialized
 
@@ -157,6 +176,23 @@ data InPacket world map
   | I30 !P30
     deriving (Eq, Show)
 
+put :: (Data.Bytes.Put.MonadPut m, Serial a) => a -> m ()
+put = serialize
+get :: (Data.Bytes.Get.MonadGet m, Serial a) => m a
+get = deserialize
+
+instance (Serial world, Serial map) => Serial (InPacket world map) where
+
+  serialize = fail "the server serializes/sends this type, not you!"
+
+  deserialize = (get :: MonadGet m => m Word8) >>= \case
+    0 -> I0 <$> get
+    1 -> I1 <$> get
+    2 -> I2 <$> get
+    3 -> I3 <$> get
+    4 -> I4 <$> get
+
+
 data OutPacket world
  = O0  Position
   | O1  P1
@@ -180,3 +216,13 @@ data OutPacket world
   | O29 !PlayerID !Word8           -- ^ Change Team
   | O30 !P30
     deriving (Eq, Show)
+
+instance (Serial world) => Serial (OutPacket world) where
+
+  deserialize = fail "the server deserializes/receives this type, not you!"
+
+  serialize (O0 p ) = put (0 :: Word8) >> put p
+  serialize (O1 o ) = put (1 :: Word8) >> put o
+  serialize (O2 w ) = put (2 :: Word8) >> put w
+  serialize (O3 p3) = put (3 :: Word8) >> put p3
+  serialize (O4 p4) = put (4 :: Word8) >> put p4
