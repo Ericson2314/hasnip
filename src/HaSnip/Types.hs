@@ -57,7 +57,9 @@ data    ColorA      = ColorA
                     deriving (Eq, Show, Generic)
 instance Serial ColorA
 
-data Team     = Blue | Greeen | Neutral deriving (Eq, Show, Ord, Enum)
+data Team     = Blue | Green | Neutral deriving (Eq, Show, Ord, Enum)
+
+-- don't define instance for Team, no consistant rep
 
 data ItemType = Intel | Home            deriving (Eq, Show, Ord, Enum)
 
